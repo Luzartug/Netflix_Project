@@ -128,6 +128,8 @@ col5.metric('Amount paid',(str(np.round_(costs.astype(int), decimals=1)) + ' €
 
 #***********************************************************************************************************************
 #GRAPH 1
+st.write("#")
+st.subheader("Which accounts watch the most Netflix ?")
 
 df_graph1 = viewing_df.drop(columns=["Duration", "Bookmark", "Start_Time"], axis=1)
 
@@ -138,7 +140,6 @@ total_watchtime_df['Total_watched_hours'] = total_watchtime_df['Total_watched_ho
 fig1 = px.bar(total_watchtime_df, x= 'Profile_Name',  y="Total_watched_hours",
              color="Total_watched_hours",
              color_continuous_scale=["rgb(1,1,1)", "rgb(86,77,77)", "rgb(131,16,16)", "rgb(219,0,0)"],
-             title="Which accounts watch the most Netflix ?",
               labels={
                      "Profile_Name": "Netflix Profile Name",
                      "Total_watched_hours": "Total time watched (Hours)"
@@ -171,7 +172,8 @@ user_radio1 = st.sidebar.multiselect("Netflix Account", account, account)
 
 film_type = ['Movie', 'Serie']
 
-type_movie_button = st.radio("Movies or Serie", film_type)
+type_movie_button = st.radio("Movies or Series", film_type)
+st.subheader(f"Top 10 of the most watched {type_movie_button}")
 
 if type_movie_button == 'Movie':
     clean_movie_df = viewing_df[(viewing_df["Type"] == 'Movie') & (viewing_df["percent_watched"] > 90)]
@@ -182,8 +184,7 @@ if type_movie_button == 'Movie':
                          x='Title',
                          y = 'Count', 
                          color = 'Profile_Name',
-                         color_discrete_sequence=["rgb(50,205,50)", "rgb(200,0,0)", "rgb(255,165,0)"],
-                         title="Top 10 of the most watched movies"
+                         color_discrete_sequence=["rgb(50,205,50)", "rgb(200,0,0)", "rgb(255,165,0)"]
                          )
     fig2.update_layout(xaxis={'categoryorder':'total descending'})
     st.plotly_chart(fig2, use_container_width=True)
@@ -197,13 +198,14 @@ if type_movie_button == 'Serie':
                         x='Show_Title', 
                         y = 'Count', 
                         color = 'Profile_Name',
-                        color_discrete_sequence=["rgb(50,205,50)", "rgb(200,0,0)", "rgb(255,165,0)"],
-                        title="Top 10 of the most watched series")
+                        color_discrete_sequence=["rgb(50,205,50)", "rgb(200,0,0)", "rgb(255,165,0)"])
     fig3.update_layout(xaxis={'categoryorder':'total descending'})
     st.plotly_chart(fig3, use_container_width=True)
 
 #***********************************************************************************************************************
 #GRAPH 3
+
+st.subheader("Number of hours spend on Netflix each weekend")
 
 viewing_df["watched_weekday2"] = viewing_df['Start_Time'].dt.day_name()
 
@@ -214,12 +216,13 @@ ordered=True)
 hours_by_weekday = viewing_df.groupby('watched_weekday2')['Total_watched_hours'].sum()
 
 hours_by_weekday=hours_by_weekday.sort_index()
-st.markdown("***Hours spent by weekday***")
 st.plotly_chart (px.bar((hours_by_weekday)))
 
 
 #***********************************************************************************************************************
 #GRAPH 4
+
+st.subheader("What is the device you use the most to watch Netflix ?")
 
 word_count_device = viewing_df[viewing_df['Profile_Name'].isin(user_radio1)].Device_Type.str.split(expand=True).stack().value_counts()
 map_count_df = word_count_device.to_frame()
@@ -240,15 +243,17 @@ devices_df = devices_df.drop(['sub_device'], axis = 1)
 
 devices_df = devices_df.groupby(['Device']).sum(['count']).reset_index().sort_values(['count'])
 
-fig4 = px.bar(devices_df, x= 'Device',  y="count",
-             title="What is the device you use the most to watch Netflix ?",
-             color='count',
-             color_continuous_scale=["rgb(1,1,1)", "rgb(86,77,77)", "rgb(131,16,16)", "rgb(219,0,0)"])
+fig4 = px.bar(devices_df, x= 'Device',
+            y="count",
+            color='count',
+            color_continuous_scale=["rgb(1,1,1)", "rgb(86,77,77)", "rgb(131,16,16)", "rgb(219,0,0)"])
 st.plotly_chart(fig4, use_container_width=True)
 
 
 #***********************************************************************************************************************
 #GRAPH 5
+
+st.subheader("Where do you watch Netflix the most ?")
 
 code_df = pd.read_csv('assets/countries_iso.csv', header=None, names=['Country', 'iso_2', 'iso_3', 'UN_Code'])
 
@@ -257,19 +262,20 @@ streaming_country_df['Country'] = streaming_country_df['Country'].astype(str).st
 streaming_country_df = streaming_country_df.merge(code_df,how='inner',left_on=['Country'],right_on=['iso_2'])
 
 fig5 = px.choropleth(streaming_country_df,
-                         locations='iso_3',
-                         scope="europe",
-                         color= 'Start_Time',
-                         color_continuous_scale=["rgb(1,1,1)", "rgb(86,77,77)", "rgb(131,16,16)", "rgb(219,0,0)"],
-                         hover_name= 'Country_y',
-                         projection= 'natural earth',
-                         range_color=[0,streaming_country_df['Start_Time'].max()],
-                         labels={'Start_Time':'Hours Series/Movies Watched'},
-                         title= 'Where do you watch Netflix the most ?')
+                        locations='iso_3',
+                        scope="europe",
+                        color= 'Start_Time',
+                        color_continuous_scale=["rgb(1,1,1)", "rgb(86,77,77)", "rgb(131,16,16)", "rgb(219,0,0)"],
+                        hover_name= 'Country_y',
+                        projection= 'natural earth',
+                        range_color=[0,streaming_country_df['Start_Time'].max()],
+                        labels={'Start_Time':'Hours Series/Movies Watched'}
+                        )
 st.plotly_chart(fig5)
 
 #***********************************************************************************************************************
 #GRAPH 6
+
 
 #preparing data for the graph
 heatmap_df = viewing_df[['Start_Time','Profile_Name','watched_weekday','watched_weekday2','watched_hour']]
@@ -280,12 +286,13 @@ heatmap_df = heatmap_total_df.pivot_table(values='W', index=['watched_hour', 'Pr
 account2 = heatmap_df.index.get_level_values('Profile_Name').unique()
 
 user_button = st.radio("Netflix Account", account2)
+st.subheader(f"When does {user_button} like to watch Netflix?")
 
 fig6, ax = plt.subplots(figsize=(20,20))
 gradient = LinearSegmentedColormap.from_list('black_red', ['white', 'darkgrey', 'darkred', 'red'])
 sns.heatmap(heatmap_df[heatmap_df.index.get_level_values('Profile_Name').isin([user_button])].droplevel(1, axis=0),
             annot=True, fmt='g', cmap=gradient, ax=ax)
-ax.set_title("When does " + user_button  + " like to watch Netflix?", fontsize=15)
+
 ax.set_xlabel('Weekday', fontsize=15)  
 ax.set_ylabel('Time spend', fontsize=15) 
 st.pyplot(fig6)
